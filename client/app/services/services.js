@@ -39,6 +39,7 @@ angular.module( 'moviematch.services', [] )
 } )
 
 .factory( 'Session', function( $http, $window, $location ) {
+  //store the user's selection for movie or genre
   var selectedOption;
   return {
     getSelectedOption: function(){
@@ -101,6 +102,7 @@ angular.module( 'moviematch.services', [] )
 }])
 
 .factory( 'Votes', function( $http, $location, Socket ) {
+  //store the previous number of options displayed to handle ties
   var prevNumberOptions; 
   return {
     addVote: function(sessionName, id){
