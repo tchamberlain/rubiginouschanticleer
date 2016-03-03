@@ -101,6 +101,7 @@ angular.module( 'moviematch.services', [] )
 }])
 
 .factory( 'Votes', function( $http, $location, Socket ) {
+  //store the number of previous options shown to handle ties
   var prevNumberOptions; 
   return {
     addVote: function(sessionName, id){
