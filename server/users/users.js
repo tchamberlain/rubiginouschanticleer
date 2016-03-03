@@ -8,9 +8,9 @@ var User = db.define( 'users', {
 
 User.sync().then( function() {
   console.log( "users table created" );
-} )
+})
 .catch( function( err ) {
   console.error( err );
-} );
+});
 
 module.exports = User;

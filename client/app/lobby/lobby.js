@@ -29,7 +29,7 @@ angular.module( 'moviematch.lobby', [] )
   };
 
   Socket.on( 'sessionStarted', function() {
-    $location.path( '/match' );
+    $location.path( '/selectingOption/genre' );
   } );
 
 } )

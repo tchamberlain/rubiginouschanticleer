@@ -3,7 +3,8 @@ var db = new Sequelize( 'moviematch', null, null, {
   dialect: 'sqlite',
 
   define: {
-    underscored: true
+    underscored: false,
+    timestamps: false
   },
 
   storage: './server/config/moviematch.sqlite'

@@ -1,12 +1,12 @@
 var app = angular.module( 'moviematch', [
+  'ngRoute',
   'moviematch.auth',
-  'moviematch.match',
-  'moviematch.prefs',
+  'moviematch.selected',
+  'moviematch.selectingOption',
   'moviematch.sessions',
   'moviematch.services',
-  'moviematch.showmatch',
   'moviematch.lobby',
-  'ngRoute',
+  'moviematch.genres',
   'btford.socket-io',
   'moviematch.directive',
   'moviematch.dstValidateUser'
@@ -26,9 +26,14 @@ var app = angular.module( 'moviematch', [
       templateUrl: 'app/auth/signout.html',
       controller: 'AuthController'
     })
-    .when( '/match', {
-      templateUrl: 'app/match/match.html',
-      controller: 'MatchController',
+    .when( '/selectingOption/:category', {
+      templateUrl: 'app/selectingOption/selectingOption.html',
+      controller: 'SelectingOptionController',
+      authenticate: true
+    })
+    .when( '/genres', {
+      templateUrl: 'app/genres/genres.html',
+      controller: 'GenresController',
       authenticate: true
     })
     .when( '/sessions', {
@@ -41,9 +46,9 @@ var app = angular.module( 'moviematch', [
       controller: 'LobbyController',
       authenticate: true
     })
-    .when( '/showmatch/:id', {
-      templateUrl: 'app/showmatch/showmatch.html',
-      controller: 'ShowmatchController',
+    .when( '/selected/:category', {
+      templateUrl: 'app/selected/selected.html',
+      controller: 'SelectedController',
       authenticate: true
     })
     .otherwise({

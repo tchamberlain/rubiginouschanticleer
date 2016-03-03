@@ -38,10 +38,10 @@ io.on( 'connect' , function( socket ){
     io.to( data.sessionName ).emit( 'sessionStarted' );
   } );
 
-  // This listener handles broadcasting a matched movie to connected clients.
-  socket.on( 'foundMatch', function( data ) {
-    socket.join( data.sessionName );
-    io.to( data.sessionName ).emit( 'matchRedirect', data.movie.id );
+  // This listener handles broadcasting a vote to connected clients.
+  socket.on( 'vote', function( voteData ) {
+    socket.join( voteData.sessionName );
+    io.to( voteData.sessionName ).emit( 'voteAdded', voteData );
   });
 });
 
