@@ -7,7 +7,7 @@ var Genre = db.define( 'genres', {
 		unique: true,
 		primaryKey: true
 	},
-	genreName : {
+	title : {
 		type: Sequelize.STRING,
 		unique: true
 	}

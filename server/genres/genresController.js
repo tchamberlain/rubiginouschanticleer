@@ -8,7 +8,7 @@ request('http://api.themoviedb.org/3/genre/movie/list?api_key=0705a8dd07324da673
     genres.forEach(function(genre) {
     	Genre.create({
     		id: genre.id,
-    		genreName: genre.name
+    		title: genre.name
     	})
     	.catch(function(err) {
     	});
@@ -29,7 +29,7 @@ module.exports = {
 
   getGenre: function(req, res) {
   	var genre = req.params.genre;
-  	Genre.findOne({where: {genreName: genre}})
+  	Genre.findOne({where: {title: genre}})
   		.then(function(genre) {
   			res.json(genre);
   		});

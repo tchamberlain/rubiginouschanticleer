@@ -180,10 +180,16 @@ angular.module( 'moviematch.services', [] )
 })
 
 .factory ('FetchGenres', function($http) {
+  var genresArr;
   return {
+    getGenresArr: function(){
+      return genresArr;
+    }, 
+
     getAllGenres: function () {
       return $http.get('/api/genres/')
         .then(function(res) {
+          genresArr = res.data;
           return res.data;
         })
         .catch(function(err) {

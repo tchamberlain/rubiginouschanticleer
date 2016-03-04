@@ -1,6 +1,6 @@
 angular.module( 'moviematch.lobby', [] )
 
-.controller( 'LobbyController', function( $scope, Session, Lobby, Socket, $location, Auth ) {
+.controller( 'LobbyController', function( $scope, Session, Lobby, Socket, $location, Auth, FetchGenres ) {
   $scope.session = {};
 
   Session.getSession()
@@ -29,7 +29,11 @@ angular.module( 'moviematch.lobby', [] )
   };
 
   Socket.on( 'sessionStarted', function() {
-    $location.path( '/selectingOption/genre' );
-  } );
+    //change the path after we've gotten the genre data
+    FetchGenres.getAllGenres()
+    .then(function(){
+      $location.path( '/selectingOption/genre' );
+    });
+  });
 
 } )
