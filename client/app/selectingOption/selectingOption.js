@@ -2,18 +2,37 @@ angular.module( 'moviematch.selectingOption', [] )
 
 
 .controller( 'SelectingOptionController', function( $scope, Votes, Session, Socket, $location, Auth, $routeParams, FetchMovies, $timeout, FetchGenres ) {
-  
+    //*******************************************************************
+   //******************** INTIALIZATION ******************************
+  //******************************************************************
   var category = $location.path().split('/')[2];
-  
   var seconds = 30;
+  $scope.counter = seconds;
   $scope.optionsVotedFor = [];
   $scope.maxNumVotes = 3;
+
+  //remove any listeners from the last time this page was visited
+  Socket.removeAllListeners("voteAdded");
+  Socket.removeAllListeners("win");
+  Socket.removeAllListeners("tie");
+  Socket.removeAllListeners("secondPassed");
 
   Session.getSession()
   .then( function( session ) {
     $scope.session = session;
+
+    //want to check if current user created session, because only they may start the game
+    var isCreator = Auth.getUserName() === $scope.session.sessionCreator;
+    
+    //if they are the creator they get set timer
+    if(isCreator){
+      setTimer(seconds);
+    } 
   });
 
+    //*******************************************************************
+   //******************** FUNCTIONS ***********************************
+  //******************************************************************
   $scope.vote = function(option){
     var optionIndex = $scope.optionsVotedFor.indexOf(option.id);
     var addVote;
@@ -28,13 +47,11 @@ angular.module( 'moviematch.selectingOption', [] )
         return false; //Tell D3 not to highlight the bubble
       }
     }
-
     voteDate = {
       sessionName: $scope.session.sessionName, 
       id: option.id, 
       addVote: addVote
     };
-
     Votes.addVote(voteDate);
     return true; //Tell D3 to highlight the bubble
   };
@@ -42,27 +59,36 @@ angular.module( 'moviematch.selectingOption', [] )
   var tallyVotes = function(){
    var winnerArr = Votes.tallyVotes($scope.options);
     if( winnerArr.length === 1 ) { //when there's a winner
-      Session.setSelectedOption(winnerArr[0]);
-      Socket.removeAllListeners("voteAdded");
-      $location.path('/selected/'+category);
+      var winnerData = {
+        sessionName: $scope.session.sessionName, 
+        winner: winnerArr[0] 
+      };
+      //notify others of win
+      Socket.emit('win', winnerData);
     } else { //when there's a tie
-      $scope.options = winnerArr;
-      $scope.optionsVotedFor =[];
-      $scope.maxNumVotes = 1;
-      seconds = Math.max(5,Math.floor(seconds / 2));//Reduce time in half
-      $scope.options.forEach(function(option){
-        option.votes = 0; 
+
+      //Reduce voting time in half
+      seconds = Math.max(5,Math.floor(seconds / 2));
+      var tieData = {
+        sessionName: $scope.session.sessionName, 
+        options: winnerArr,
+        seconds: seconds  
+      };
+      //notify others of tie
+      Socket.emit('tie', tieData, function(){
       });
-      setTimer(seconds);
+      console.log('when running?')
+      //reset timer
+        setTimer(seconds);
+
     }
   }
 
   var setTimer = function(seconds){
-    $scope.counter = seconds;
     $scope.timer = function(seconds){
       var countdown = $timeout($scope.timer,1000);
-      $scope.counter -= 1;
-      if( $scope.counter === 0 ){
+      Socket.emit( 'secondPassed', {sessionName: $scope.session.sessionName});
+      if( $scope.counter <= 0 ){
         //when the timer reaches zero, make it stop
         $timeout.cancel(countdown);
         tallyVotes();
@@ -70,8 +96,6 @@ angular.module( 'moviematch.selectingOption', [] )
     }
     $scope.timer();
   };
-  
-  setTimer(seconds);
 
   if(category === 'genre'){//fetching genres 
     var data = FetchGenres.getGenresArr();
@@ -88,12 +112,42 @@ angular.module( 'moviematch.selectingOption', [] )
     $scope.options = data;
   }
 
+  //*******************************************************************
+ //******************** SOCKET LISTENERS *****************************
+//******************************************************************
+  Socket.on( 'secondPassed', function() {
+    console.log('sed passed?');
+    $scope.counter -= 1;
+  });
+
+  Socket.on( 'tie', function(data) {
+    console.log('tie received!', data);
+    $scope.counter = data.seconds;
+    $scope.options = data.options;
+    $scope.options.forEach(function(option){
+      option.votes = 0; 
+    });
+    //reset choices user has voted for to 0
+    $scope.optionsVotedFor =[];
+    //only allow one vote during a tie-breakers
+    $scope.maxNumVotes = 1;
+  });
+
+  Socket.on( 'win', function(data) {
+    console.log('win received!', data);
+    Session.setSelectedOption(data.winner);
+    $location.path('/selected/'+category);
+  });
+
   Socket.on( 'voteAdded', function(vote) {
     //update our array of options to reflect the new vote
     $scope.options = Votes.receiveVote(vote.id, $scope.options, vote.addVote);
   });
 
 })
+  //****************************************************************
+ //******************** D3 **************************************
+//*************************************************************
 
 .directive('bubbles', ['$window', '$timeout', function($window, $timeout) {
   return {

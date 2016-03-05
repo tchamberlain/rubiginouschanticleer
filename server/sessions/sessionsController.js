@@ -12,9 +12,11 @@ module.exports = {
 
   addSession: function( req, res, next ) {
     var sessionName = req.body.sessionName;
-
+    var sessionCreator = req.body.sessionCreator;
+    console.log('SESSION CREATED',sessionCreator );
     Session.create( {
-      sessionName: sessionName
+      sessionName: sessionName,
+      sessionCreator: sessionCreator
     } ).then( function() {
       res.status = 201;
       res.end();

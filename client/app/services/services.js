@@ -49,8 +49,11 @@ angular.module( 'moviematch.services', [] )
       selectedOption = option;
     },
 
-    createSession: function( sessionName, callback ) {
-      return $http.post( '/api/sessions', { sessionName: sessionName } )
+    createSession: function( sessionName, sessionCreator, callback ) {
+      return $http.post( '/api/sessions', { sessionName: sessionName, 
+        sessionCreator: sessionCreator
+
+       } )
       .then( function( response ) {
         callback( sessionName ); // used for emitting session data
         return response;
