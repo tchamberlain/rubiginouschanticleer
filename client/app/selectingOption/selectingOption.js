@@ -6,7 +6,7 @@ angular.module( 'moviematch.selectingOption', [] )
    //******************** INTIALIZATION ******************************
   //******************************************************************
   var category = $location.path().split('/')[2];
-  var seconds = 30;
+  var seconds = 10;
   $scope.counter = seconds;
   $scope.optionsVotedFor = [];
   $scope.maxNumVotes = 3;
@@ -16,6 +16,9 @@ angular.module( 'moviematch.selectingOption', [] )
   Socket.removeAllListeners("win");
   Socket.removeAllListeners("tie");
   Socket.removeAllListeners("secondPassed");
+
+
+  Votes.resetPrevNumberOptions();
 
   Session.getSession()
   .then( function( session ) {
@@ -85,10 +88,12 @@ angular.module( 'moviematch.selectingOption', [] )
   }
 
   var setTimer = function(seconds){
+    var count = seconds;
     $scope.timer = function(seconds){
       var countdown = $timeout($scope.timer,1000);
+      count -= 1;
       Socket.emit( 'secondPassed', {sessionName: $scope.session.sessionName});
-      if( $scope.counter <= 0 ){
+      if( count === 0 ){
         //when the timer reaches zero, make it stop
         $timeout.cancel(countdown);
         tallyVotes();
@@ -122,13 +127,13 @@ angular.module( 'moviematch.selectingOption', [] )
 
   Socket.on( 'tie', function(data) {
     console.log('tie received!', data);
-    $scope.counter = data.seconds;
-    $scope.options = data.options;
-    $scope.options.forEach(function(option){
-      option.votes = 0; 
-    });
     //reset choices user has voted for to 0
     $scope.optionsVotedFor =[];
+    $scope.counter = data.seconds;
+    data.options.forEach(function(option){
+      option.votes = 0; 
+    });
+    $scope.options = data.options;
     //only allow one vote during a tie-breakers
     $scope.maxNumVotes = 1;
   });
@@ -191,6 +196,7 @@ angular.module( 'moviematch.selectingOption', [] )
                     .on("tick", tick);
 
       var update = function() {
+        console.log('UPDATE DATA FOR D3:',data);
         maxDomainValue = d3.max(data, function(d) {return rValue(d);});
 
         rScale.domain([0, maxDomainValue]); //Sets the bubble sizing scale;
@@ -206,7 +212,7 @@ angular.module( 'moviematch.selectingOption', [] )
         allNodes = bubbleGroup.selectAll(".bubble-node").data(data, function(d) {return idValue(d)});
         //Format existing circles
         allNodes.selectAll("circle")
-                .attr("r", function(d){return rScale(rValue(d));});
+                .attr("r", function(d){console.log('VoteValue: ',rScale(rValue(d)));return rScale(rValue(d));});
 
         allNodes.exit().remove(); //Remove unused nodes
 
@@ -238,7 +244,7 @@ angular.module( 'moviematch.selectingOption', [] )
                  .text(function(d) {return textValue(d)});
 
         allLabels.selectAll(".bubble-label-value")
-                 .text(function(d) {return voteValue(d)});
+                 .text(function(d) {console.log('VoteValue: ',voteValue(d));return voteValue(d)});
 
         //Add text and count to label
         var labelsEnter = allLabels.enter()
@@ -337,19 +343,20 @@ angular.module( 'moviematch.selectingOption', [] )
                                     .attr("id", "bubble-labels");
       
       //If window size changes, reposition the bubbles
-      $window.onresize = function() {
-        width = angular.element($window)[0].innerWidth;
-        height = angular.element($window)[0].innerHeight;
-        svg.attr("width", width);
-        svg.attr("height", height);
-        maxRadius = height/12,
-        rScale = d3.scale.sqrt().range([0, maxRadius]),
-        update();
-      };
+      // $window.onresize = function() {
+      //   width = angular.element($window)[0].innerWidth;
+      //   height = angular.element($window)[0].innerHeight;
+      //   svg.attr("width", width);
+      //   svg.attr("height", height);
+      //   maxRadius = height/12,
+      //   rScale = d3.scale.sqrt().range([0, maxRadius]),
+      //   update();
+      // };
 
       //If data changes, update the bubbles
       scope.$watch('$parent.options', function(newData) {
         if (!newData) return;
+        console.log('NEW DATA ON D3:', data);
         data = newData;
         update();
       }, true);

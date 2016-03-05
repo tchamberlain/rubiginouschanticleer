@@ -104,7 +104,7 @@ angular.module( 'moviematch.services', [] )
 }])
 
 .factory( 'Votes', function( $http, $location, Socket ) {
-  var prevNumberOptions; 
+  var prevNumberOptions = null; 
   var hashFn = function(str, max) {
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
@@ -116,6 +116,9 @@ angular.module( 'moviematch.services', [] )
   };
 
   return {
+    resetPrevNumberOptions: function(){
+      prevNumberOptions = null;
+    },
 
     addVote: function(voteData){
       Socket.emit( 'vote', voteData );
